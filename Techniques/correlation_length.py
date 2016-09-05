@@ -1,6 +1,7 @@
 from __future__ import division
 from random import choice, randint
 import pandas as pd
+import numpy as np
 
 class Node():
     def __init__(self, node_id, independent, dependent):
@@ -23,7 +24,10 @@ def random_walk(dataset, length_of_walk):
     start_node = randint(0, number_of_nodes)
     walk = [start_node]
     for _ in xrange(length_of_walk):
-        start_node = choice(dataset[start_node].neighbors)
+        try:
+            start_node = choice(dataset[start_node].neighbors)
+        except:
+            print dataset[start_node].neighbors, start_node
         walk.append(dataset[start_node].node_id)
     return walk
 
@@ -53,12 +57,21 @@ def generate_graph(filename):
     assert(len(Nodes) == len(contents)), "Sanity check failed"
     return Nodes
 
-# def
+
+def get_correlation_length(filename, m=20, s=1):
+    graph = generate_graph(filename)
+    rp1 = random_walk(graph, m)
+    fitness = [graph[c].dependent_value for c in rp1]
+    # print fitness,
+    variance = np.var(fitness)
+    mean_f = np.mean(fitness)
+    temp_correlation_length = 0
+    for i in xrange(m-1):
+        temp_correlation_length += (fitness[i] - mean_f)*(fitness[i+1] - mean_f)
+    r_s = temp_correlation_length/(variance * (m-s))
+    correlation_length = -1/np.log(abs(r_s))
+    return round(correlation_length, 3)
 
 if __name__ == "__main__":
-    graph = generate_graph("../FeatureModels/Apache.csv")
-    rp1 = random_walk(graph, 10)
-    fitness = [graph[c].dependent_value for c in rp1]
-    norm_fitness = [(f-min(fitness))/(max(fitness) - min(fitness)) for f in fitness]
-    print fitness
-    print norm_fitness
+    for m in xrange(10, 25):
+        print m, np.mean([get_correlation_length("../FeatureModels/Apache.csv", m=m) for _ in xrange(10)])
