@@ -31,7 +31,7 @@ def get_cross_eval(filename, n=100):
 
     # perform a 10 way cross eval
     from sklearn.cross_validation import KFold
-    kf = KFold(len(independent_values), n_folds=10)
+    kf = KFold(len(independent_values), n_folds=5)
     for train, test in kf:
         X_train = [independent_values[i] for i in train]
         X_test = [independent_values[i] for i in test]
