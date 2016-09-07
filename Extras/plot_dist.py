@@ -6,7 +6,14 @@ from sklearn import tree
 from os import listdir
 
 
-def get_cross_eval(filename, n=100):
+def euclidean_distance(list1, list2):
+    assert(len(list1) == len(list2)), "The points don't have the same dimension"
+    distance = sum([(i - j) ** 2 for i, j in zip(list1, list2)]) ** 0.5
+    assert(distance >= 0), "Distance can't be less than 0"
+    return distance
+
+
+def find_distance(filename):
     results = []
     contents = pd.read_csv(filename)
     independent_columns = [c for c in contents.columns if "$<" not in c]
@@ -14,17 +21,22 @@ def get_cross_eval(filename, n=100):
     independents = contents[independent_columns]
     dependents = contents[dependent_column]
 
-    graph_name = filename.split("/")[-1]
-    import matplotlib.pyplot as plt
-    plt.hist(dependents)
-    plt.title(graph_name)
-    plt.xlabel("Value")
-    plt.ylabel("Frequency")
-    plt.savefig("./Figures/" + graph_name[:-3]+".png")
-    plt.cla()
+    distances = [[[-1, -1] for _ in xrange(len(independents))] for _ in xrange(len(independents))]
+    for i in xrange(len(independents)):
+        for j in xrange(len(independents)):
+            if i==j:
+                distances[i][j][0] = 0
+                distances[i][j][1] = 0
+            elif distances[i][j][0] == -1:
+                distances[i][j][0] = euclidean_distance(independents.iloc[i], independents.iloc[j])
+                distances[i][j][1] = abs(dependents[i] - dependents[j])
+                distances[j][i][0] = distances[i][j][0]
+                distances[j][i][1] = distances[i][j][1]
+
+    lista = []
+    listb = []
+    print [d[1] for d in distances[0] if d[0]==1]
 
 if __name__ == "__main__":
 
-    files = ["../FeatureModels/" + f for f in listdir("../FeatureModels") if ".csv" in f]
-    for file in files:
-        get_cross_eval(file)
+    find_distance("../FeatureModels/Apache.csv")
