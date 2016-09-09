@@ -35,31 +35,22 @@ def get_sequence_number(before, after):
     else: return 0
 
 
-def get_ic(filename, epsilon=10):
-    global distance_matrix
+def run_prediction(train_independent, train_dependent, test_independent, test_dependent):
+    from sklearn import tree
+    cart = tree.DecisionTreeRegressor()
+    cart = cart.fit(train_independent, train_dependent)
+
+    prediction = [float(x) for x in cart.predict(test_independent)]
+    mre = []
+    for i, j in zip(test_dependent, prediction):
+        if i != 0:mre.append(abs(i - j) / abs(i))
+        else: print "#"
+    return round(sum(mre) / len(mre), 5) * 100
+
+
+def get_ic(independent_samples, dependent_samples, n, epsilon=10):
     print ". ",
     sys.stdout.flush()
-    contents = pd.read_csv(filename)
-    n = max(10, int(len(contents) * 0.1))
-    independent_columns = [c for c in contents.columns if "$<" not in c]
-    dependent_column = [c for c in contents.columns if "$<" in c][-1]
-    independents = contents[independent_columns]
-    dependents = contents[dependent_column]
-
-    max_distance = max([max(d) for d in distance_matrix])
-    indexes = range(len(independents))
-    shuffle(indexes)
-    independent_samples = []
-    dependent_samples = []
-    step_size = int(max_distance * 0.1)
-    while len(independent_samples) <= n:
-        chosen_index = choice(indexes)
-        choosen = independents.iloc[chosen_index]
-        min_distance = [distance(choosen, other) for other in independent_samples]
-        if min_distance > step_size:
-            independent_samples.append(choosen)
-            dependent_samples.append(dependents.iloc[chosen_index])
-        indexes.remove(chosen_index)
 
     # build sequence
     indexes = range(len(independent_samples))
@@ -101,34 +92,88 @@ def get_ic(filename, epsilon=10):
             repeated_removed_pairs.append(zero_removed_pairs[i])
 
     m_measure = len(repeated_removed_pairs)/(len(pairs)-1)
+
     # print ">> ", dependent_sequence
     # print pairs
     # print h_measure
     # print
-    return h_measure
+    return [h_measure, m_measure]
 
 
 def wrapper_get_ic(filename):
     global distance_matrix
-    divs = 100
+    divs = 200
 
     contents = pd.read_csv(filename)
     independent_columns = [c for c in contents.columns if "$<" not in c]
     independents = contents[independent_columns]
     dependent_column = [c for c in contents.columns if "$<" in c][-1]
-    dependents = contents[dependent_column]
+    min_val_dependent = min(contents[dependent_column])
+    max_val_dependent = max(contents[dependent_column])
+    dependents = [(c - min_val_dependent)/(max_val_dependent - min_val_dependent) for c in contents[dependent_column]]
+
 
     distance_matrix = calculate_distance_matrix(independents)
     epsilon_range = max(dependents) - min(dependents)
-    x_axis = [(i * (epsilon_range/divs)) for i in xrange(1,divs)]
-    y_axis = [get_ic(filename, epsilon=x) for x in x_axis]
 
-    import matplotlib.pyplot as plt
-    plt.plot(x_axis, y_axis)
-    plt.ylim(-0.5, 1)
-    plt.show()
+    n = max(10, int(len(contents) * 0.1))
+    max_distance = max([max(d) for d in distance_matrix])
+    indexes = range(len(independents))
+    shuffle(indexes)
+    independent_samples = []
+    dependent_samples = []
+    step_size = int(max_distance * 0.1)
+    while len(independent_samples) <= n:
+        chosen_index = choice(indexes)
+        choosen = independents.iloc[chosen_index]
+        min_distance = [distance(choosen, other) for other in independent_samples]
+        if min_distance > step_size:
+            independent_samples.append(choosen)
+            dependent_samples.append(dependents[chosen_index])
+        indexes.remove(chosen_index)
+
+    test_independent = [independents.iloc[i] for i in indexes]
+    test_dependent = [dependents[i] for i in indexes]
+
+    x_axis = [(i * (epsilon_range/divs)) for i in xrange(1,divs)]
+    y_axis = [get_ic(independent_samples,dependent_samples, n, epsilon=x) for x in x_axis]
+
+    h_y_axis = [ya[0] for ya in y_axis]
+    m_y_axis = [ya[1] for ya in y_axis]
+
+    H_max = max(h_y_axis)
+    settling_sensitivity = [i for i,h in enumerate(h_y_axis) if h < 0.05][0]
+    M_0 = get_ic(independent_samples, dependent_samples, n, epsilon=0)[1]
+    epsilon_half = max([x_axis[i] for i,m in enumerate(m_y_axis) if m > 0.5*M_0])
+
+    # measuring epsilon star <- stability
+    max_diff = max([abs(dependent_samples[i] - dependent_samples[i - 1]) for i in xrange(2, len(dependent_samples))])
+    max_epsilon = [e for e in x_axis if e >= max_diff]
+    print
+    # print "Max Epsilon: ", max_epsilon[0]
+    print "maximum information content: ", H_max,
+    print "settling sensitivity: ", settling_sensitivity,
+    print "initial partial information content: ", M_0,
+    print "half partial information content point: ", epsilon_half
+    print "Baseline Prediction: ", run_prediction(independent_samples,dependent_samples, test_independent, test_dependent)
+
+
+    # import matplotlib.pyplot as plt
+    # plt.plot(x_axis, y_axis)
+    # # plt.ylim(-0.5, 1)
+    # plt.show()
 
 if __name__ == "__main__":
     files = ["../FeatureModels/" + f for f in listdir("../FeatureModels") if ".csv" in f]
     results = []
+    print "apache"
     wrapper_get_ic("../FeatureModels/Apache.csv")
+    print "sqlite"
+    wrapper_get_ic("../FeatureModels/SQLite.csv")
+    print "x264"
+    wrapper_get_ic("../FeatureModels/BerkeleyDBJ.csv")
+    # wrapper_get_ic("../TFeatureModels/no_interaction_apache.csv")
+    # wrapper_get_ic("../TFeatureModels/twentyfive_interaction_apache.csv")
+    # wrapper_get_ic("../TFeatureModels/fifty_interaction_apache.csv")
+    # wrapper_get_ic("../TFeatureModels/one_hundred_interaction_apache.csv")
+    # wrapper_get_ic("../TFeatureModels/two_hundred_interaction_apache.csv")
