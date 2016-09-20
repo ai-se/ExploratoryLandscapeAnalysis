@@ -48,7 +48,7 @@ def get_ela_features(independent, dependent):
 if __name__ == "__main__":
 
     files = ["../FeatureModels/" + f for f in listdir("../FeatureModels") if ".csv" in f]
-    for filename in files:
+    for filename in ["../FeatureModels/BerkeleyDB.csv"]:
         contents = pd.read_csv(filename)
         independent_columns = [c for c in contents.columns if "$<" not in c]
         dependent_column = [c for c in contents.columns if "$<" in c]

@@ -44,7 +44,7 @@ def get_cross_eval(filename, n=100):
 
         mre = []
         for i, j in zip(y_test, prediction):
-            mre.append(abs(i - j)/float(i))
+            mre.append(abs(i - j))
         results.append(sum(mre)/len(mre))
 
     return round(np.mean(results) * 100, 3), round(np.std(results) * 100, 3)
@@ -52,7 +52,8 @@ def get_cross_eval(filename, n=100):
 
 if __name__ == "__main__":
     results = []
-    files = ["../FeatureModels/" + f for f in listdir("../FeatureModels") if ".csv" in f]
+    folder_name = "../TFeatureModels/"
+    files = [ folder_name + f for f in listdir(folder_name) if ".csv" in f]
     for file in files:
         mean, std = get_cross_eval(file)
         results.append(holder(file.split("/")[-1], mean, std))
