@@ -10,7 +10,7 @@ global distance_matrix
 
 
 def distance(lista, listb):
-    return jaccard_similarity_score(lista, listb, normalize=False)
+    return 1 - jaccard_similarity_score(lista, listb, normalize=True)
 
 
 def calculate_distance_matrix(independents):
@@ -112,11 +112,10 @@ def wrapper_get_ic(filename):
     max_val_dependent = max(contents[dependent_column])
     dependents = [(c - min_val_dependent)/(max_val_dependent - min_val_dependent) for c in contents[dependent_column]]
 
-
     distance_matrix = calculate_distance_matrix(independents)
     epsilon_range = max(dependents) - min(dependents)
 
-    n = max(10, int(len(contents) * 0.1))
+    n = max(30, int(len(contents) * 0.1))
     max_distance = max([max(d) for d in distance_matrix])
     indexes = range(len(independents))
     shuffle(indexes)
@@ -140,6 +139,7 @@ def wrapper_get_ic(filename):
 
     h_y_axis = [ya[0] for ya in y_axis]
     m_y_axis = [ya[1] for ya in y_axis]
+
 
     H_max = max(h_y_axis)
     settling_sensitivity = [i for i,h in enumerate(h_y_axis) if h < 0.05][0]

@@ -21,16 +21,15 @@ def get_fdc(filename, n=10):
 
     indexes = range(len(contents))
     shuffle(indexes)
+
+    # n = 100#min(n, int(len(contents) * 0.1))
     samples = indexes[:n]
     independent_values = [independents.iloc[i] for i in samples]
     dependent_values = [dependents.iloc[i] for i in samples]
     assert(len(independent_values) == len(dependent_values)), "sanity check failed"
 
-    global_optima_list = sorted([[i,val] for i, val in enumerate(dependent_values)], key=lambda x:x[-1])
-    global_optima_index = global_optima_list[0][0]
-
-    independent_global_optima = independent_values[global_optima_index]
-    dependent_global_optima = dependent_values[global_optima_index]
+    global_optima_index = dependents.tolist().index(min(dependents))
+    independent_global_optima = independents.iloc[global_optima_index]
     distance_list = [euclidean_distance(point, independent_global_optima) for point in independent_values]
 
     mean_distance = np.mean(distance_list)
@@ -47,6 +46,5 @@ def get_fdc(filename, n=10):
 if __name__ == "__main__":
     files = ["../FeatureModels/" + f for f in listdir("../FeatureModels") if ".csv" in f]
     for file in files:
-        print file
-        for n in xrange(10, 25):
-            print n, np.mean([get_fdc(file, n=n) for _ in xrange(10)])
+        print file,
+        print np.mean([get_fdc(file, n=100) for _ in xrange(10)])
