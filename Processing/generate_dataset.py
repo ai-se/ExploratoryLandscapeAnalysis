@@ -6,13 +6,11 @@ import pandas as pd
 from random import choice
 
 features = [
-    'nbc.nn_nb.sd_ratio',
-    'nbc.nn_nb.mean_ratio',
-    'nbc.nn_nb.cor',
-    'nbc.dist_ratio.coeff_var',
-    'nbc.nb_fitness.cor',
-    'nbc.costs_fun_evals',
-    'nbc.costs_runtime',
+    'ela_distr.skewness',
+    'ela_distr.kurtosis',
+    'ela_distr.number_of_peaks',
+    'ela_distr.costs_fun_evals',
+    'ela_distr.costs_runtime',
     'ela_meta.lin_simple.adj_r2',
     'ela_meta.lin_simple.intercept',
     'ela_meta.lin_simple.coef.min',
@@ -24,6 +22,21 @@ features = [
     'ela_meta.quad_w_interact.adj_r2',
     'ela_meta.costs_fun_evals',
     'ela_meta.costs_runtime',
+    'nbc.nn_nb.sd_ratio',
+    'nbc.nn_nb.mean_ratio',
+    'nbc.nn_nb.cor',
+    'nbc.dist_ratio.coeff_var',
+    'nbc.nb_fitness.cor',
+    'nbc.costs_fun_evals',
+    'nbc.costs_runtime',
+    'ic.h.max',
+    'ic.eps.s',
+    'ic.eps.max',
+    'ic.eps.ratio',
+    'ic.m0',
+    'ic.costs_fun_evals',
+    'ic.costs_runtime',
+    'no_decisions',
 ]
 
 def number_of_features_selected(content):
@@ -73,7 +86,7 @@ def condese_datasets(result_dir, filename):
         df = pd.DataFrame({'<$obj2': number_of_features_selected(dcontent_subsample[dcolumns])})
         ocontent = ocontent.join(df)
         ocontent = ocontent.drop('index', 1)
-        onorm = (ocontent - ocontent.min()) / (ocontent.max() - ocontent.min())
+        onorm = (ocontent - ocontent.min()) / (ocontent.max() - ocontent.min() + 0.00001)
         obj.append(intrinsic_dimenstionality(onorm))
 
     return temp + [round(np.median(dec), 3), round(np.median(obj), 3)]

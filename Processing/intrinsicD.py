@@ -58,12 +58,15 @@ def intrinsic_dimenstionality(cont):
     content = cont
     generate_distance_matrix2(content)
     number_of_dimensions = len(content.columns)
-    values_r = [i ** 0.5 for i in xrange(1, number_of_dimensions + 1)]
+    print ">>> ", number_of_dimensions
+    high_r = highest_r()
+    values_r = [i * 0.05 * high_r for i in xrange(1, 20)]
     log_c_r = [get_c_r(content, r) for r in values_r]
     log_r = map(lambda x:np.log(x), values_r)
     slopes = []
     for i in xrange(len(log_r)-1):
         slopes.append((log_c_r[i+1]-log_c_r[i])/(log_r[i+1]-log_r[i]))
+    slopes = [s for s in slopes if not np.isnan(s) and not np.isinf(s)]
     return np.mean(slopes)
 
 if __name__ == "__main__":
