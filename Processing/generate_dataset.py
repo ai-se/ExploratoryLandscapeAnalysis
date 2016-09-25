@@ -99,10 +99,10 @@ if __name__ == "__main__":
         name_entry.extend([f + 'median'])
     name_entry += ['IDem_Decision', 'IDem_Objective']
     csv_result.append(name_entry)
-    for name in os.listdir("../FeatureModels/"):
+    for name in os.listdir("../scalar_dataset/"):
         if ".csv" not in name: continue
         n = name.split(".")[0]
-        csv_result.append(condese_datasets("../Result_FeatureModels/", "../FeatureModels/" + name))
+        csv_result.append(condese_datasets("../Result_scalar_models/", "../scalar_dataset/" + name))
 
 
     import csv
