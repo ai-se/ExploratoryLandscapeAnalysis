@@ -83,9 +83,6 @@ def condese_datasets(result_dir, filename):
         dec.append(intrinsic_dimenstionality(dcontent_subsample[dcolumns]))
 
         ocontent = dcontent_subsample[ocolumns].reset_index()
-        df = pd.DataFrame({'<$obj2': number_of_features_selected(dcontent_subsample[dcolumns])})
-        ocontent = ocontent.join(df)
-        ocontent = ocontent.drop('index', 1)
         onorm = (ocontent - ocontent.min()) / (ocontent.max() - ocontent.min() + 0.00001)
         obj.append(intrinsic_dimenstionality(onorm))
 
@@ -102,11 +99,12 @@ if __name__ == "__main__":
     for name in os.listdir("../scalar_dataset/"):
         if ".csv" not in name: continue
         n = name.split(".")[0]
-        csv_result.append(condese_datasets("../Result_scalar_models/", "../scalar_dataset/" + name))
+        csv_result.append(condese_datasets("../Result_scalar_dataset/", "../scalar_dataset/" + name))
+        print csv_result[-1]
 
 
     import csv
 
-    with open("median_scores_feature_model.csv", "wb") as f:
+    with open("scalar_feature_model.csv", "wb") as f:
         writer = csv.writer(f)
         writer.writerows(csv_result)
