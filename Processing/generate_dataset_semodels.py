@@ -39,6 +39,8 @@ features = [
     'no_decisions',
 ]
 
+id_dict = {}
+
 def number_of_features_selected(content):
     rows = len(content)
     counts = []
@@ -49,6 +51,10 @@ def number_of_features_selected(content):
 
 
 def condese_datasets(result_dir, filename):
+    global id_dict
+    position_underscore = [pos for pos, char in enumerate(filename) if char == "_"][-1]
+    majorname = filename[:position_underscore].split("/")[-1]
+
     dataset_name = filename.split("/")[-1].split(".")[0]
     files = [result_dir + f for f in os.listdir(result_dir) if dataset_name in f]
     data = {}
@@ -68,26 +74,25 @@ def condese_datasets(result_dir, filename):
         except:
             temp.extend([data[f][0]])
 
-    content = pd.read_csv(filename)
     dec = []
     obj = []
     decision_id_list = []
-    for _ in xrange(1):
-        # indexes = range(len(content))
-        # index_subsample =[choice(indexes) for _ in xrange(100)]
-
+    if majorname not in id_dict.keys():
+        print filename
+        content = pd.read_csv("../SEModels/" + majorname + ".txt")
         dcolumns = [c for c in content.columns if ">>" not in c]
         ocolumns = [c for c in content.columns if ">>" in c]
 
-        dcontent_subsample = content.sample(2000) if len(content) > 2000 else content.sample(len(content))
+        dcontent_subsample = content.sample(1000) if len(content) > 1000 else content.sample(len(content))
         # dcontent_subsample_norm = (dcontent_subsample - dcontent_subsample.min()) / (dcontent_subsample.max() - dcontent_subsample.min())
         dec.append(intrinsic_dimenstionality(dcontent_subsample[dcolumns]))
 
-        ocontent =  dcontent_subsample[ocolumns]
+        ocontent = dcontent_subsample[ocolumns]
         onorm = (ocontent - ocontent.min()) / (ocontent.max() - ocontent.min() + 0.000001 )
         obj.append(intrinsic_dimenstionality(onorm))
+        id_dict[majorname] = [round(np.median(dec), 3), round(np.median(obj), 3)]
 
-    return temp + [round(np.median(dec), 3), round(np.median(obj), 3)]
+    return temp + id_dict[majorname]
 
 if __name__ == "__main__":
     csv_result = []
@@ -97,14 +102,15 @@ if __name__ == "__main__":
         name_entry.extend([f + 'median'])
     name_entry += ['IDem_Decision', 'IDem_Objective']
     csv_result.append(name_entry)
-    for name in os.listdir("../SEModels/"):
-        if ".txt" not in name: continue
+    for name in os.listdir("../scalar_dataset_SE/"):
+        if ".csv" not in name: continue
         n = name.split(".")[0]
-        csv_result.append(condese_datasets("../Result_SEModels/", "../SEModels/" + name))
+        csv_result.append(condese_datasets("../Result_SEModels/", "../scalar_dataset_SE/" + name))
         print csv_result[-1]
+
 
     import csv
 
-    with open("median_scores_se_models.csv", "wb") as f:
+    with open("scalar_se.csv", "wb") as f:
         writer = csv.writer(f)
         writer.writerows(csv_result)

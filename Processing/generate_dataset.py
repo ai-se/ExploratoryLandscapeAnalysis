@@ -72,21 +72,28 @@ def condese_datasets(result_dir, filename):
         except:
             temp.extend([data[f][0]])
 
-    content = pd.read_csv(filename)
+
     dec = []
     obj = []
     decision_id_list = []
     if majorname not in id_dict.keys():
-        # indexes = range(len(content))
-        # index_subsample =[choice(indexes) for _ in xrange(100)]
+        actual_filename = "../FeatureModels/" + majorname + ".csv"
+        content = pd.read_csv(actual_filename)
         dcolumns = [c for c in content.columns if "$<" not in c]
         ocolumns = [c for c in content.columns if "$<" in c]
 
         dcontent_subsample = content.sample(1000) if len(content) > 1000 else content.sample(len(content))
-        # dcontent_subsample_norm = (dcontent_subsample - dcontent_subsample.min()) / (dcontent_subsample.max() - dcontent_subsample.min())
         dec.append(intrinsic_dimenstionality(dcontent_subsample[dcolumns]))
 
+        obj2 = []
+        for lineno in xrange(len(dcontent_subsample)):
+            obj2.append(sum(dcontent_subsample[dcolumns].iloc[lineno].tolist()))
+        df = pd.DataFrame({'<$obj2': obj2})
+
         ocontent = dcontent_subsample[ocolumns].reset_index()
+        del ocontent['index']
+        ocontent = ocontent.join(df)
+
         onorm = (ocontent - ocontent.min()) / (ocontent.max() - ocontent.min() + 0.00001)
         obj.append(intrinsic_dimenstionality(onorm))
         id_dict[majorname] = [round(np.median(dec), 3), round(np.median(obj), 3)]
