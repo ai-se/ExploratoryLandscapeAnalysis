@@ -39,6 +39,8 @@ features = [
     'no_decisions',
 ]
 
+id_dict = {}
+
 def number_of_features_selected(content):
     rows = len(content)
     counts = []
@@ -49,6 +51,8 @@ def number_of_features_selected(content):
 
 
 def condese_datasets(result_dir, filename):
+    global id_dict
+    majorname = filename.split("/")[-1].split("_")[0]
     print filename
     dataset_name = filename.split("/")[-1].split(".")[0]
     files = [result_dir + f for f in os.listdir(result_dir) if dataset_name in f]
@@ -72,7 +76,7 @@ def condese_datasets(result_dir, filename):
     dec = []
     obj = []
     decision_id_list = []
-    for _ in xrange(1):
+    if majorname not in id_dict.keys():
         # indexes = range(len(content))
         # index_subsample =[choice(indexes) for _ in xrange(100)]
         dcolumns = [c for c in content.columns if "$<" not in c]
@@ -85,8 +89,9 @@ def condese_datasets(result_dir, filename):
         ocontent = dcontent_subsample[ocolumns].reset_index()
         onorm = (ocontent - ocontent.min()) / (ocontent.max() - ocontent.min() + 0.00001)
         obj.append(intrinsic_dimenstionality(onorm))
+        id_dict[majorname] = [round(np.median(dec), 3), round(np.median(obj), 3)]
 
-    return temp + [round(np.median(dec), 3), round(np.median(obj), 3)]
+    return temp + id_dict[majorname]
 
 if __name__ == "__main__":
     csv_result = []
